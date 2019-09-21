@@ -1,12 +1,3 @@
-Cette librairie est surement inutile à part pour moi :=)
-
-Je l'utilise pour mes scripts de migration.
-
-Elle est bien moins fini que plusieurs autres que l'on peut trouver sur le web
-
-exemple:
-
-```
 # -*- encoding: utf-8 -*-
 from openerp_connection import Openerp, Openerp_db
 
@@ -58,5 +49,3 @@ if connection.uid:
 
 else:
     print("Erreur de connection")
-
-```
