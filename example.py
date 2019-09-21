@@ -1,5 +1,5 @@
 # -*- encoding: utf-8 -*-
-from openerp_connection import Openerp, Openerp_db
+from openerp_connection import Openerp, Openerp_db, Module
 
 db = "demo"
 protocole = 'http://'
@@ -13,8 +13,6 @@ password = 'admin'
 connect_db = Openerp_db(protocole, serveur, port)
 if db not in connect_db.list():
     connect_db.sock.create_database(PASS_ADMIN_OPENERP, db, False, 'fr_FR', password)
-"""Supresssion de base"""
-# connect_db.sock.drop(PASS_ADMIN_OPENERP, db)
 
 """ Connection """
 connection = Openerp('http://', '127.0.0.1', '8069', 'demo', 'admin', 'admin')
@@ -42,10 +40,22 @@ if connection.uid:
     print(connection.execute('res.partner', 'update_address', [partner_create_id],{'street':'Rue de la pompe'}))
     print(connection.execute('res.partner', 'name_get', partner_create_id))
     print(connection.read('res.partner',partner_create_id,fields=['street','email']))
+
     """ Supression """
     connection.unlink('res.partner', partner_create_id)
 
+    """ Mise a jour liste des modules """
+    connect_module = Module(connection)
 
+    connect_module.update_list()
 
+    """ Install Module """
+    connect_module.install('project')
+
+    """ Update Module """
+    connect_module.update('project', force=True)
+
+    """Supresssion de base"""
+    connect_db.sock.drop(PASS_ADMIN_OPENERP, db)
 else:
     print("Erreur de connection")
