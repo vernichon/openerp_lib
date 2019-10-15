@@ -340,18 +340,17 @@ class Openerp(object):
     def unlink(self, module, ids, context={'lang': 'en_US'}):
         try:
             res = self.objet.execute(self.dbname, self.uid, self.pwd, module,
-                                     'unlink', ids, context)
+                                     'unlink', ids )
             return res
         except xmlrpc.client.Fault as e:
             print(e)
 
     def create(self, module, value, context=None):
-        return self.objet.execute(self.dbname, self.uid, self.pwd, module,
-                                  'create', value, context)
+        return self.objet.execute(self.dbname, self.uid, self.pwd, module, 'create', value)
 
     def write(self, module, ids, value, context=None):
         return self.objet.execute(self.dbname, self.uid, self.pwd, module,
-                                  'write', ids, value, context)
+                                  'write', ids, value)
 
 
 class Openerp_db(object):
