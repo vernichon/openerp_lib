@@ -27,7 +27,7 @@ class Module(object):
                 module = connection.read('ir.module.module', module_id)
                 print("Sur base %10s module %40s Latest Version %10s Installed Version %10s state %15s " % (
                     dbname, module['name'] + ('' * (20 - len(module['name']))),
-                    module['installed_version'], module['latest_version'], module['state']), end=' ')
+                    module['installed_version'], module['latest_version'], module['state']) )
                 if module['state'] == "installed" and module['installed_version'] != module['latest_version']:
                     print("upgradable")
                 elif module['state'] == "uninstalled":
@@ -181,8 +181,8 @@ class Module(object):
         module_ids = objet.execute(dbname, uid, pwd, 'ir.module.module',
                                    'search', [], 0, 9000)
         for module_id in module_ids:
-            module = objet.execute(dbname, uid, pwd, 'ir.module.module',
-                                   'read', module_id)
+            module = objet.execute(dbname, uid, pwd, 'ir.module.module','read', module_id)
+            module = module[0]
             if module['latest_version'] is None or module['installed_version'].replace(' ', '') == '':
                 print(module['name'], module['installed_version'], module[
                     'latest_version'
