@@ -25,9 +25,13 @@ class Module(object):
         for module_id in module_ids:
             if module_id:
                 module = connection.read('ir.module.module', module_id)
-                print("Sur base %10s module %40s Latest Version %10s Installed Version %10s state %15s " % (
-                    dbname, module['name'] + ('' * (20 - len(module['name']))),
-                    module['installed_version'], module['latest_version'], module['state']), end=' ')
+                print(
+                    "Sur base %10s module %40s Latest Version %10s Installed Version %10s state %15s "
+                    % (dbname, module['name'] + ('' *
+                                                 (20 - len(module['name']))),
+                       module['installed_version'], module['latest_version'],
+                       module['state']),
+                    end=' ')
                 if module['state'] == "installed" and module['installed_version'] != module['latest_version']:
                     print("upgradable")
                 elif module['state'] == "uninstalled":
@@ -149,9 +153,7 @@ class Module(object):
                                        'read', module_id, ['name'])
                 module_name = module[0]['name']
             objet.execute(dbname, uid, pwd, 'ir.module.module',
-                          'button_install', module_id)
-            objet.execute(dbname, uid, pwd, 'base.module.upgrade',
-                          'upgrade_module', [1])
+                          'button_immediate_install', module_id)
             print("Install %s OK" % module_name)
         else:
             return None
@@ -183,15 +185,16 @@ class Module(object):
         for module_id in module_ids:
             module = objet.execute(dbname, uid, pwd, 'ir.module.module',
                                    'read', module_id)
-            if module['latest_version'] is None or module['installed_version'].replace(' ', '') == '':
-                print(module['name'], module['installed_version'], module[
-                    'latest_version'
-                ], "ready to remove")
+            if module['latest_version'] is None or module['installed_version'].replace(
+                    ' ', '') == '':
+                print(module['name'], module['installed_version'],
+                      module['latest_version'], "ready to remove")
                 self.remove(module_name=module['name'], module_id=module_id)
                 self.connection.clean_ir_values()
                 self.connection.clean_ir_model_data()
 
-    def update_all(self, ):
+    def update_all(
+            self, ):
         objet = self.connection.objet
         dbname = self.connection.dbname
         uid = self.connection.uid
@@ -202,8 +205,8 @@ class Module(object):
                                                'installed')], 0, 9000)
         for module_id in module_ids:
             module = objet.execute(dbname, uid, pwd, 'ir.module.module',
-                                   'read', module_id, ['installed_version',
-                                                       'latest_version'])
+                                   'read', module_id,
+                                   ['installed_version', 'latest_version'])
             if module['latest_version'] is not None and module['installed_version'] is not None and module['installed_version'] != module['latest_version']:
                 self.update(module_id=module_id)
         return True
@@ -214,21 +217,29 @@ class Module(object):
         uid = self.connection.uid
         pwd = self.connection.pwd
         if not module_id and module_name:
-            module_id = objet.execute(dbname, uid, pwd, 'ir.module.module', 'search', [('name', '=', module_name)])
+            module_id = objet.execute(dbname, uid, pwd, 'ir.module.module',
+                                      'search', [('name', '=', module_name)])
             if module_id:
                 module_id = module_id[0]
 
-        module = objet.execute(dbname, uid, pwd, 'ir.module.module', 'read', module_id)[0]
+        module = objet.execute(dbname, uid, pwd, 'ir.module.module', 'read',
+                               module_id)[0]
 
-        print("Module %s Latest Version %s Installed Version %s " % (module['name'], module['installed_version'], module['latest_version']))
+        print("Module %s Latest Version %s Installed Version %s " %
+              (module['name'], module['installed_version'],
+               module['latest_version']))
         if module['state'] in ('installed', 'to upgrade'):
-            if (module['latest_version'] is not None and module['installed_version'] is not None and (module['installed_version'] != module['latest_version'])) or force:
-                objet.execute(dbname, uid, pwd, 'ir.module.module', 'button_immediate_upgrade', [module_id])
+            if (module['latest_version'] is not None
+                    and module['installed_version'] is not None and
+                (module['installed_version'] != module['latest_version'])
+                ) or force:
+                objet.execute(dbname, uid, pwd, 'ir.module.module',
+                              'button_immediate_upgrade', [module_id])
 
-                module = objet.execute(dbname, uid, pwd, 'ir.module.module', 'read', module_id)[0]
-                print("fin update %s  la version est maintenant %s  " % (
-                    module['name'], module['installed_version']
-                ))
+                module = objet.execute(dbname, uid, pwd, 'ir.module.module',
+                                       'read', module_id)[0]
+                print("fin update %s  la version est maintenant %s  " %
+                      (module['name'], module['installed_version']))
 
 
 class Openerp(object):
@@ -252,22 +263,32 @@ class Openerp(object):
         self.url = protocole + host + ":" + str(port)
         context = ssl.SSLContext()
         context.verify_mode = ssl.CERT_NONE
-        self.server = xmlrpc.client.ServerProxy(self.url + '/xmlrpc/common', allow_none=True, context=context)
+        self.server = xmlrpc.client.ServerProxy(
+            self.url + '/xmlrpc/common', allow_none=True, context=context)
         self.uid = self.server.login(self.dbname, self.user, self.pwd)
-        self.objet = xmlrpc.client.ServerProxy(self.url + '/xmlrpc/object', allow_none=True, context=context)
-        self.wizard = xmlrpc.client.ServerProxy(self.url + '/xmlrpc/wizard', allow_none=True, context=context)
-        self.report = xmlrpc.client.ServerProxy(self.url + '/xmlrpc/report', allow_none=True, context=context)
+        self.objet = xmlrpc.client.ServerProxy(
+            self.url + '/xmlrpc/object', allow_none=True, context=context)
+        self.wizard = xmlrpc.client.ServerProxy(
+            self.url + '/xmlrpc/wizard', allow_none=True, context=context)
+        self.report = xmlrpc.client.ServerProxy(
+            self.url + '/xmlrpc/report', allow_none=True, context=context)
 
     def clean_ir_values(self):
         print("Clean ir.values")
-        values_ids = self.objet.execute(self.dbname, self.uid, self.pwd,'ir.values', 'search', [], 0, 80000,'value')
-        for value in self.objet.execute(self.dbname, self.uid, self.pwd,'ir.values', 'read', values_ids):
+        values_ids = self.objet.execute(self.dbname, self.uid, self.pwd,
+                                        'ir.values', 'search', [], 0, 80000,
+                                        'value')
+        for value in self.objet.execute(self.dbname, self.uid, self.pwd,
+                                        'ir.values', 'read', values_ids):
             if "ir.actions" in value['value']:
                 (model, id) = value['value'].split(',')
-                res = self.objet.execute(self.dbname, self.uid, self.pwd,model, 'search', [('id', '=',int(id))])
+                res = self.objet.execute(self.dbname, self.uid, self.pwd,
+                                         model, 'search', [('id', '=',
+                                                            int(id))])
                 if not res:
                     print("Supression %s , id : %s" % (model, id))
-                    self.objet.execute(self.dbname, self.uid, self.pwd,"ir.values", 'unlink', value['id'])
+                    self.objet.execute(self.dbname, self.uid, self.pwd,
+                                       "ir.values", 'unlink', value['id'])
 
     def clean_ir_model_data(self):
         print("Clean ir.model.data")
@@ -288,16 +309,28 @@ class Openerp(object):
                     id, ['model', 'res_id'])
                 # ~ print model['model']
 
-                if "active" in self.objet.execute(self.dbname, self.uid, self.pwd, model_data['model'], 'fields_get'):
-                    recherche = [('id', '=', model_data['res_id']), ('active', 'in', ('True', 'False'))]
+                if "active" in self.objet.execute(
+                        self.dbname, self.uid, self.pwd, model_data['model'],
+                        'fields_get'):
+                    recherche = [('id', '=', model_data['res_id']),
+                                 ('active', 'in', ('True', 'False'))]
                 else:
                     recherche = [('id', '=', model_data['res_id'])]
-                res = self.objet.execute(self.dbname, self.uid, self.pwd, model_data['model'], 'search', recherche)
+                res = self.objet.execute(self.dbname, self.uid, self.pwd,
+                                         model_data['model'], 'search',
+                                         recherche)
                 if not res:
-                    print("Suppression", self.dbname, id, model_data['model'], model_data['res_id'])
-                    self.objet.execute(self.dbname, self.uid, self.pwd,'ir.model.data', 'unlink',model_data['id'])
-                    ir_values_ids = self.objet.execute(self.dbname, self.uid, self.pwd, 'ir.values', 'search',[('value', "=", "%s,%s" % (model_data['model'], model_data['res_id']))])
-                    self.objet.execute(self.dbname, self.uid, self.pwd, 'ir.values', 'unlink', ir_values_ids)
+                    print("Suppression", self.dbname, id, model_data['model'],
+                          model_data['res_id'])
+                    self.objet.execute(self.dbname, self.uid, self.pwd,
+                                       'ir.model.data', 'unlink',
+                                       model_data['id'])
+                    ir_values_ids = self.objet.execute(
+                        self.dbname, self.uid, self.pwd, 'ir.values', 'search',
+                        [('value', "=", "%s,%s" % (model_data['model'],
+                                                   model_data['res_id']))])
+                    self.objet.execute(self.dbname, self.uid, self.pwd,
+                                       'ir.values', 'unlink', ir_values_ids)
 
     def __str__(self):
         return '%s [%s]' % (self.url, self.dbname)
@@ -308,23 +341,45 @@ class Openerp(object):
 
     def execute(self, module, action, ids=None, *args, **kwargs):
         if ids:
-            return self.objet.execute(self.dbname, self.uid, self.pwd, module, action, ids, *args, **kwargs)
+            return self.objet.execute(self.dbname, self.uid, self.pwd, module,
+                                      action, ids, *args, **kwargs)
         else:
             return self.objet.execute(self.dbname, self.uid, self.pwd, module,
                                       action, args, kwargs)
 
-    def copy(self, module, id, default=None, context=None, done_list=None, local=False):
+    def copy(self,
+             module,
+             id,
+             default=None,
+             context=None,
+             done_list=None,
+             local=False):
         return self.objet.execute(self.dbname, self.uid, self.pwd, module,
                                   'copy', id, default, context, done_list,
                                   local)
 
-    def search(self, module, pattern, offset=0, limit=9999999, order=False, context=None):
+    def search(self,
+               module,
+               pattern,
+               offset=0,
+               limit=9999999,
+               order=False,
+               context=None):
         return self.objet.execute(self.dbname, self.uid, self.pwd, module,
                                   'search', pattern, offset, limit, order,
                                   context)
 
-    def search_read(self, module, pattern, fields=None, offset=0, limit=9999999, order=False, context=None):
-        res = self.objet.execute(self.dbname, self.uid, self.pwd, module, 'search', pattern, offset, limit, order, context)
+    def search_read(self,
+                    module,
+                    pattern,
+                    fields=None,
+                    offset=0,
+                    limit=9999999,
+                    order=False,
+                    context=None):
+        res = self.objet.execute(self.dbname, self.uid, self.pwd, module,
+                                 'search', pattern, offset, limit, order,
+                                 context)
         return self.read(module, res, fields, context)
 
     def read(self, module, ids, fields=None, context=None):
