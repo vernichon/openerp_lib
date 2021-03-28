@@ -9,6 +9,15 @@ import ssl
 class Module(object):
     connection = None
 
+    def is_installed(self, module_name):
+        dbname = self.connection.dbname
+        connection = self.connection
+        module_id = connection.search_read('ir.module.module', [('name', '=', module_name)], fields=['state'])
+        if module_id and module_id[0]['state'] == 'installed':
+            return True
+        else:
+            return False
+
     def versioncourante(self, module_name):
         dbname = self.connection.dbname
         connection = self.connection
