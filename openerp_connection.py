@@ -114,7 +114,7 @@ class Module(object):
                         print("Uninstall dependance %s " % dependant['name'])
             print("Uninstall Module  %s " % module['name'])
             objet.execute(dbname, uid, pwd, 'ir.module.module', 'button_uninstall', [module_id])
-
+            self.upgrade()
         else:
             return None
 
@@ -308,18 +308,11 @@ class Openerp_db(object):
     def drop(self, admin_passwd, db_name):
         self.sock.drop(admin_passwd, db_name)
 
-    def create(
-        self,
-        admin_passwd,
-        db_name,
-        demo=False,
-        lang='fr_FR',
-        country_code='CH',
-        phone=False,
-        user_password='admin',
-        login='admin',
-    ):
+    def create(self, admin_passwd, db_name, demo=False, lang='fr_FR', country_code='CH', phone=False, user_password='admin',login='admin'):
         self.sock.create_database(admin_passwd, db_name, demo, lang, user_password, login, country_code, phone)
+
+    def createv8(self, admin_passwd='admin', demo=False, lang='fr_FR', db_name='odoo'):
+        self.sock.create_database(db_name, demo, lang, admin_passwd)
 
     def backup(self, admin_passwd, db_name, filename=None):
         data = self.sock.dump(admin_passwd, db_name, 'zip')
