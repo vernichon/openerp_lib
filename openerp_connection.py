@@ -10,13 +10,9 @@ class Module(object):
     connection = None
 
     def is_installed(self, module_name):
-        dbname = self.connection.dbname
         connection = self.connection
         module_id = connection.search_read('ir.module.module', [('name', '=', module_name)], fields=['state'])
-        if module_id and module_id[0]['state'] == 'installed':
-            return True
-        else:
-            return False
+        return (module_id and module_id[0]['state'] == 'installed')
 
     def versioncourante(self, module_name):
         dbname = self.connection.dbname
@@ -33,7 +29,8 @@ class Module(object):
             if module_id:
                 module = connection.read('ir.module.module', module_id)
                 print("Sur base %10s module %40s Latest Version %10s Installed Version %10s state %15s " %
-                      (dbname, module['name'] + ('' * (20 - len(module['name']))), module['installed_version'], module['latest_version'], module['state']),
+                      (dbname, module['name'] + ('' * (20 - len(module['name']))), module['installed_version'],
+                       module['latest_version'], module['state']),
                       end=' ')
                 if module['state'] == "installed" and module['installed_version'] != module['latest_version']:
                     print("upgradable")
@@ -71,7 +68,8 @@ class Module(object):
         uid = self.connection.uid
         pwd = self.connection.pwd
 
-        model_data_ids = objet.execute(dbname, uid, pwd, 'ir.model.data', 'search', [('module', "=", module_name), ('noupdate', '=', False)])
+        model_data_ids = objet.execute(dbname, uid, pwd, 'ir.model.data', 'search', [('module', "=", module_name),
+                                                                                     ('noupdate', '=', False)])
         nbr = len(model_data_ids)
         x = 0
         for model_data_id in model_data_ids:
@@ -101,15 +99,19 @@ class Module(object):
         if module_id:
             print("Module ID ", module_id)
             module = objet.execute(dbname, uid, pwd, 'ir.module.module', 'read', module_id)[0]
-            module_dependency_ids = objet.execute(dbname, uid, pwd, 'ir.module.module.dependency', 'search', [('name', '=', module['name'])])
+            module_dependency_ids = objet.execute(dbname, uid, pwd, 'ir.module.module.dependency', 'search',
+                                                  [('name', '=', module['name'])])
 
             if module_dependency_ids:
                 for module_dependency_id in module_dependency_ids:
-                    module_dependency = objet.execute(dbname, uid, pwd, 'ir.module.module.dependency', 'read', module_dependency_id)[0]
-                    dependant = objet.execute(dbname, uid, pwd, 'ir.module.module', 'read', module_dependency['module_id'][0])[0]
+                    module_dependency = objet.execute(dbname, uid, pwd, 'ir.module.module.dependency', 'read',
+                                                      module_dependency_id)[0]
+                    dependant = objet.execute(dbname, uid, pwd, 'ir.module.module', 'read',
+                                              module_dependency['module_id'][0])[0]
                     if dependant['state'] == 'installed':
                         print("Module", module_dependency['module_id'][1])
-                        objet.execute(dbname, uid, pwd, 'ir.module.module', 'button_uninstall', [module_dependency['module_id'][0]])
+                        objet.execute(dbname, uid, pwd, 'ir.module.module', 'button_uninstall',
+                                      [module_dependency['module_id'][0]])
                         self.upgrade()
                         print("Uninstall dependance %s " % dependant['name'])
             print("Uninstall Module  %s " % module['name'])
@@ -171,10 +173,13 @@ class Module(object):
         uid = self.connection.uid
         pwd = self.connection.pwd
         self.update_list()
-        module_ids = objet.execute(dbname, uid, pwd, 'ir.module.module', 'search', [('state', '=', 'installed')], 0, 9000)
+        module_ids = objet.execute(dbname, uid, pwd, 'ir.module.module', 'search', [('state', '=', 'installed')], 0,
+                                   9000)
         for module_id in module_ids:
-            module = objet.execute(dbname, uid, pwd, 'ir.module.module', 'read', module_id, ['installed_version', 'latest_version'])
-            if module['latest_version'] is not None and module['installed_version'] is not None and module['installed_version'] != module['latest_version']:
+            module = objet.execute(dbname, uid, pwd, 'ir.module.module', 'read', module_id,
+                                   ['installed_version', 'latest_version'])
+            if module['latest_version'] is not None and module[
+                    'installed_version'] is not None and module['installed_version'] != module['latest_version']:
                 self.update(module_id=module_id)
         return True
 
@@ -190,9 +195,11 @@ class Module(object):
 
         module = objet.execute(dbname, uid, pwd, 'ir.module.module', 'read', module_id)[0]
 
-        print("Module %s Latest Version %s Installed Version %s " % (module['name'], module['installed_version'], module['latest_version']))
+        print("Module %s Latest Version %s Installed Version %s " %
+              (module['name'], module['installed_version'], module['latest_version']))
         if module['state'] in ('installed', 'to upgrade'):
-            if (module['latest_version'] is not None and module['installed_version'] is not None and (module['installed_version'] != module['latest_version'])) or force:
+            if (module['latest_version'] is not None and module['installed_version'] is not None and
+                (module['installed_version'] != module['latest_version'])) or force:
                 objet.execute(dbname, uid, pwd, 'ir.module.module', 'button_immediate_upgrade', [module_id])
 
                 module = objet.execute(dbname, uid, pwd, 'ir.module.module', 'read', module_id)[0]
@@ -232,14 +239,17 @@ class Openerp(object):
 
     def clean_ir_model_data(self):
         print("Clean ir.model.data")
-        model_ids = self.objet.execute(self.dbname, self.uid, self.pwd, 'ir.model', 'search', [('model', '!=', 'res_users')])
+        model_ids = self.objet.execute(self.dbname, self.uid, self.pwd, 'ir.model', 'search',
+                                       [('model', '!=', 'res_users')])
         models = self.objet.execute(self.dbname, self.uid, self.pwd, 'ir.model', 'read', model_ids, ['model'])
         modeles = sorted(models, key=lambda x: x['model'])
         for model in modeles:
             print(model['model'])
-            model_data_ids = self.objet.execute(self.dbname, self.uid, self.pwd, 'ir.model.data', 'search', [('model', "=", model['model'])])
+            model_data_ids = self.objet.execute(self.dbname, self.uid, self.pwd, 'ir.model.data', 'search',
+                                                [('model', "=", model['model'])])
             for id in model_data_ids:
-                model_data = self.objet.execute(self.dbname, self.uid, self.pwd, 'ir.model.data', 'read', id, ['model', 'res_id'])
+                model_data = self.objet.execute(self.dbname, self.uid, self.pwd, 'ir.model.data', 'read', id,
+                                                ['model', 'res_id'])
                 # ~ print model['model']
 
                 if "active" in self.objet.execute(self.dbname, self.uid, self.pwd, model_data['model'], 'fields_get'):
@@ -250,7 +260,9 @@ class Openerp(object):
                 if not res:
                     print("Suppression", self.dbname, id, model_data['model'], model_data['res_id'])
                     self.objet.execute(self.dbname, self.uid, self.pwd, 'ir.model.data', 'unlink', model_data['id'])
-                    ir_values_ids = self.objet.execute(self.dbname, self.uid, self.pwd, 'ir.values', 'search', [('value', "=", "%s,%s" % (model_data['model'], model_data['res_id']))])
+                    ir_values_ids = self.objet.execute(self.dbname, self.uid, self.pwd, 'ir.values', 'search',
+                                                       [('value', "=", "%s,%s" %
+                                                         (model_data['model'], model_data['res_id']))])
                     self.objet.execute(self.dbname, self.uid, self.pwd, 'ir.values', 'unlink', ir_values_ids)
 
     def __str__(self):
@@ -266,13 +278,16 @@ class Openerp(object):
             return self.objet.execute(self.dbname, self.uid, self.pwd, module, action, args, kwargs)
 
     def copy(self, module, id, default=None, context=None, done_list=None, local=False):
-        return self.objet.execute(self.dbname, self.uid, self.pwd, module, 'copy', id, default, context, done_list, local)
+        return self.objet.execute(self.dbname, self.uid, self.pwd, module, 'copy', id, default, context, done_list,
+                                  local)
 
     def search(self, module, pattern, offset=0, limit=9999999, order=False, context=None):
-        return self.objet.execute(self.dbname, self.uid, self.pwd, module, 'search', pattern, offset, limit, order, context)
+        return self.objet.execute(self.dbname, self.uid, self.pwd, module, 'search', pattern, offset, limit, order,
+                                  context)
 
     def search_read(self, module, pattern, fields=None, offset=0, limit=9999999, order=False, context=None):
-        res = self.objet.execute(self.dbname, self.uid, self.pwd, module, 'search', pattern, offset, limit, order, context)
+        res = self.objet.execute(self.dbname, self.uid, self.pwd, module, 'search', pattern, offset, limit, order,
+                                 context)
         return self.read(module, res, fields, context)
 
     def read(self, module, ids, fields=None, context=None):
@@ -308,7 +323,15 @@ class Openerp_db(object):
     def drop(self, admin_passwd, db_name):
         self.sock.drop(admin_passwd, db_name)
 
-    def create(self, admin_passwd, db_name, demo=False, lang='fr_FR', country_code='CH', phone=False, user_password='admin',login='admin'):
+    def create(self,
+               admin_passwd,
+               db_name,
+               demo=False,
+               lang='fr_FR',
+               country_code='CH',
+               phone=False,
+               user_password='admin',
+               login='admin'):
         self.sock.create_database(admin_passwd, db_name, demo, lang, user_password, login, country_code, phone)
 
     def createv8(self, admin_passwd='admin', demo=False, lang='fr_FR', db_name='odoo'):
